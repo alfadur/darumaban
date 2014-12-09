@@ -333,6 +333,12 @@ class KeyboardController(window: Window): Controller
         ControllerAction.Right to KeyCodes.Right,
         ControllerAction.Roll to KeyCodes.Space)
 
+    val spareKeys = mapOf(
+        ControllerAction.Up to KeyCodes.S,
+        ControllerAction.Left to KeyCodes.A,
+        ControllerAction.Down to KeyCodes.W,
+        ControllerAction.Right to KeyCodes.D)
+
     val isPressed = hashMapOf<Int?, Boolean>()
 
     ;{
@@ -349,8 +355,10 @@ class KeyboardController(window: Window): Controller
     }
 
     override fun isActive(action: ControllerAction): Boolean =
-        keys.contains(action) &&
-            isPressed.getOrElse(keys[action]) { false }
+        (keys.contains(action) &&
+            isPressed.getOrElse(keys[action]) { false }) ||
+        (spareKeys.contains(action) &&
+            isPressed.getOrElse(spareKeys[action]) { false })
 
 }
 

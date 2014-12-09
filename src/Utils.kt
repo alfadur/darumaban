@@ -45,4 +45,9 @@ object KeyCodes
     val Up = 38
     val Right = 39
     val Down = 40
+
+    val W = 87
+    val A = 65
+    val S = 83
+    val D = 68
 }
