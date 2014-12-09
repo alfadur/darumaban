@@ -18,6 +18,10 @@
       this.Up = 38;
       this.Right = 39;
       this.Down = 40;
+      this.W = 87;
+      this.A = 65;
+      this.S = 83;
+      this.D = 68;
     });
   }, /** @lends _ */ {
     Point: Kotlin.createClass(null, function (x, y) {
@@ -624,18 +628,26 @@
       return [_.Controller];
     }, function (window) {
       this.keys = Kotlin.modules['stdlib'].kotlin.mapOf_eoa9s7$([Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Up, _.KeyCodes.Down), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Left, _.KeyCodes.Left), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Down, _.KeyCodes.Up), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Right, _.KeyCodes.Right), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Roll, _.KeyCodes.Space)]);
+      this.spareKeys = Kotlin.modules['stdlib'].kotlin.mapOf_eoa9s7$([Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Up, _.KeyCodes.S), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Left, _.KeyCodes.A), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Down, _.KeyCodes.W), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Right, _.KeyCodes.D)]);
       this.isPressed = Kotlin.modules['stdlib'].kotlin.hashMapOf_eoa9s7$([]);
       var isPressed = this.isPressed;
       window.onkeydown = _.KeyboardController.KeyboardController$f(isPressed);
       window.onkeyup = _.KeyboardController.KeyboardController$f_0(isPressed);
     }, /** @lends _.KeyboardController.prototype */ {
       isActive_k8o7am$: function (action) {
-        var tmp$0;
+        var tmp$0, tmp$1;
         if (Kotlin.modules['stdlib'].kotlin.contains_qbyksu$(this.keys, action))
           tmp$0 = Kotlin.modules['stdlib'].kotlin.getOrElse_lphkgk$(this.isPressed, this.keys.get_za3rmp$(action), _.KeyboardController.isActive_k8o7am$f);
         else
           tmp$0 = false;
-        return tmp$0;
+        if (!tmp$0)
+          if (Kotlin.modules['stdlib'].kotlin.contains_qbyksu$(this.spareKeys, action))
+            tmp$1 = Kotlin.modules['stdlib'].kotlin.getOrElse_lphkgk$(this.isPressed, this.spareKeys.get_za3rmp$(action), _.KeyboardController.isActive_k8o7am$f_0);
+          else
+            tmp$1 = false;
+        else
+          tmp$1 = true;
+        return tmp$1;
       }
     }, /** @lends _.KeyboardController */ {
       KeyboardController$f: function (isPressed) {
@@ -649,6 +661,9 @@
         };
       },
       isActive_k8o7am$f: function () {
+        return false;
+      },
+      isActive_k8o7am$f_0: function () {
         return false;
       }
     }),
