@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <script type="application/javascript" src="scripts/pixi.js"></script>
+    <script type="application/javascript" src="scripts/kotlin.js"></script>
+    <script type="application/javascript" src="scripts/LD31.js"></script>
+    <title></title>
+    <style type="text/css">
+        canvas {
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+        .help {
+            position: relative;
+            margin-left: auto;
+            margin-right: auto;
+            width: 500px;
+        }
+        #title, h3 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <audio autoplay="" loop="">
+        <source src="music/theme.ogg" type="audio/ogg">
+        <source src="music/theme.mp3" type="audio/mp3">
+    </audio>
+
+    <h1 id="title">
+        Darumaban (an <a href="http://ludumdare.com/compo/ludum-dare-31/">LD31</a> Jam Entry)
+    </h1>
+
+    <div id="game">
+    </div>
+
+    <div class="help">
+        <h3>How to Play</h3>
+        <ul>
+            <li>Press [Arrow keys] to move</li>
+            <li>Hold [Space] while moving to roll a snowball</li>
+            <li>Roll a snowball over snow to increase its size</li>
+            <li>3 snowballs of decreasing size on top of each other make a snowman</li>
+            <li>The goal is to fill all the marked tiles with snowmen</li>
+            <li>Thanks for playing, and have fun!</li>
+        </ul>
+    </div>
+</body>
+</html>
