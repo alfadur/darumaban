@@ -14,6 +14,7 @@
     });
     this.KeyCodes = Kotlin.createObject(null, function () {
       this.Space = 32;
+      this.Shift = 16;
       this.Left = 37;
       this.Up = 38;
       this.Right = 39;
@@ -628,7 +629,7 @@
       return [_.Controller];
     }, function (window) {
       this.keys = Kotlin.modules['stdlib'].kotlin.mapOf_eoa9s7$([Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Up, _.KeyCodes.Down), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Left, _.KeyCodes.Left), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Down, _.KeyCodes.Up), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Right, _.KeyCodes.Right), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Roll, _.KeyCodes.Space)]);
-      this.spareKeys = Kotlin.modules['stdlib'].kotlin.mapOf_eoa9s7$([Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Up, _.KeyCodes.S), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Left, _.KeyCodes.A), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Down, _.KeyCodes.W), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Right, _.KeyCodes.D)]);
+      this.spareKeys = Kotlin.modules['stdlib'].kotlin.mapOf_eoa9s7$([Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Up, _.KeyCodes.S), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Left, _.KeyCodes.A), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Down, _.KeyCodes.W), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Right, _.KeyCodes.D), Kotlin.modules['stdlib'].kotlin.to_l1ob02$(_.ControllerAction.object.Roll, _.KeyCodes.Shift)]);
       this.isPressed = Kotlin.modules['stdlib'].kotlin.hashMapOf_eoa9s7$([]);
       var isPressed = this.isPressed;
       window.onkeydown = _.KeyboardController.KeyboardController$f(isPressed);
