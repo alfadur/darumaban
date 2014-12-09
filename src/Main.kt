@@ -337,7 +337,8 @@ class KeyboardController(window: Window): Controller
         ControllerAction.Up to KeyCodes.S,
         ControllerAction.Left to KeyCodes.A,
         ControllerAction.Down to KeyCodes.W,
-        ControllerAction.Right to KeyCodes.D)
+        ControllerAction.Right to KeyCodes.D,
+        ControllerAction.Roll to KeyCodes.Shift)
 
     val isPressed = hashMapOf<Int?, Boolean>()
 

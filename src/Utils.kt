@@ -40,6 +40,7 @@ native fun alert(message: Any): Unit = noImpl
 object KeyCodes
 {
     val Space = 32
+    val Shift = 16
 
     val Left = 37
     val Up = 38
