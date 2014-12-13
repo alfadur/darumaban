@@ -55,14 +55,18 @@ class Game(val controllers: List<Controller>)
     val background = PIXI.SpriteBatch()
     val goals = PIXI.Graphics()
 
+    val characters = PIXI.DisplayObjectContainer()
     val charSprites = ArrayList<PIXI.DisplayObject>()
-    val snowSprites = ArrayList<PIXI.DisplayObject>()
+    val snowmen = PIXI.DisplayObjectContainer()
+    val snowmanSprites = ArrayList<PIXI.DisplayObject>()
 
     val texture = PIXI.BaseTexture.fromImage("images/tiles.png", false)
     val tiles = arrayListOf<PIXI.Texture>()
 
+    val hints = PIXI.SpriteBatch()
+
     ;{
-        for (i in 0..5)
+        for (i in 0..6)
         {
             val x = (i mod 2) * tileSize
             val y = (i div 2) * tileSize
@@ -98,21 +102,32 @@ class Game(val controllers: List<Controller>)
             stage.addChild(this)
         }
 
-        updateSnow()
-        stage.addChild(snow)
 
-        updateGoals()
+        stage.addChild(snow)
         stage.addChild(goals)
+        updateGoals()
+        stage.addChild(snowmen)
+        stage.addChild(characters)
+
+        restart()
+
+        stage.addChild(hints)
+
+        window.requestAnimationFrame { update() }
+    }
+
+    private fun restart()
+    {
+        level.reset()
+
+        characters.removeChildren()
+        charSprites.clear()
 
         for (i in controllers.indices)
         {
-            level.characters.add(Character(spawnPoints[i]))
+            level.createCharacter(spawnPoints[i])
+            addCharSprite()
         }
-
-        level.characters.forEach { addCharSprite() }
-        level.snowmen.forEach { addSnowSprite(it) }
-
-        window.requestAnimationFrame { update() }
     }
 
     private fun createSprite(x: Int, y: Int, texture: PIXI.Texture): PIXI.Sprite
@@ -128,7 +143,6 @@ class Game(val controllers: List<Controller>)
         val y = (tileIndex div levelSize) + 1
         return createSprite(x, y, texture)
     }
-
 
     private fun updateGoals()
     {
@@ -174,8 +188,8 @@ class Game(val controllers: List<Controller>)
         if (snowman.isComplete)
         {
             val sprite = createSprite(0, 0, tiles[4])
-            snowSprites.add(sprite)
-            stage.addChild(sprite)
+            snowmanSprites.add(sprite)
+            snowmen.addChild(sprite)
         }
         else
         {
@@ -195,8 +209,8 @@ class Game(val controllers: List<Controller>)
                 sprites.addChild(sprite)
             }
 
-            snowSprites.add(sprites)
-            stage.addChild(sprites)
+            snowmanSprites.add(sprites)
+            snowmen.addChild(sprites)
         }
     }
 
@@ -206,7 +220,7 @@ class Game(val controllers: List<Controller>)
         sprite.pivot = PIXI.Point(tileSize div 2, tileSize div 2)
 
         charSprites.add(sprite)
-        stage.addChild(sprite)
+        characters.addChild(sprite)
     }
 
     fun lerpTile(x1: Int, x2: Int, a: Double) =
@@ -232,8 +246,15 @@ class Game(val controllers: List<Controller>)
         return win
     }
 
+    fun checkAction(action: ControllerAction) = controllers.any { it.isActive(action) }
+
     fun update()
     {
+        if (checkAction(ControllerAction.Restart))
+        {
+            restart()
+        }
+
         if (level.snowChanged)
         {
             updateSnow()
@@ -242,8 +263,8 @@ class Game(val controllers: List<Controller>)
 
         if (level.snowmenChanged)
         {
-            snowSprites.forEach{ stage.removeChild(it) }
-            snowSprites.clear()
+            snowmanSprites.clear()
+            snowmen.removeChildren()
 
             level.snowmen.forEach { addSnowSprite(it) }
             level.snowmenChanged = false
@@ -264,6 +285,41 @@ class Game(val controllers: List<Controller>)
                     else -> Direction.None
                 }
                 isRolling = controller.isActive(ControllerAction.Roll)
+            }
+
+            if (controller.isActive(ControllerAction.Hint))
+            {
+                if (!hints.visible || char.rollSourcesUpdated)
+                {
+                    hints.removeChildren()
+                    hints.visible = true
+
+                    for (i in Character.moveDirections.indices)
+                    {
+                        val start = char.rollSources[i]
+                        if (start != null)
+                        {
+                            val end = start + Character.moveDirections[i]
+
+                            val x = lerpTile(start.x + 1, end.x + 1, 0.5)
+                            val y = lerpTile(start.y + 1, end.y + 1, 0.5)
+
+                            val sprite = PIXI.Sprite(tiles[6])
+                            val shift = if (i > 0) tileSize div 2 else 0
+
+                            sprite.position = PIXI.Point(x + shift, y + shift)
+
+                            sprite.pivot = PIXI.Point(tileSize div 2, tileSize div 2)
+                            sprite.rotation = i * Math.PI / 2
+                            hints.addChild(sprite)
+                        }
+                    }
+                    char.rollSourcesUpdated = false
+                }
+            }
+            else
+            {
+                hints.visible = false
             }
         }
 
@@ -288,7 +344,7 @@ class Game(val controllers: List<Controller>)
 
         }
 
-        for ((s, sprite) in level.snowmen.zip(snowSprites).sortBy { -it.first.partsCount })
+        for ((s, sprite) in level.snowmen.zip(snowmanSprites).sortBy { -it.first.partsCount })
         {
             val x = lerpTile(s.currentTile.x, s.targetTile.x, s.shift)
             val y = lerpTile(s.currentTile.y, s.targetTile.y, s.shift)
@@ -309,8 +365,12 @@ enum class ControllerAction
     Left
     Right
     Down
+
     Throw
     Roll
+
+    Restart
+    Hint
 }
 
 trait Controller
@@ -326,40 +386,65 @@ object RandomController: Controller
 
 class KeyboardController(window: Window): Controller
 {
-    val keys = mapOf(
-        ControllerAction.Up to KeyCodes.Down,
-        ControllerAction.Left to KeyCodes.Left,
-        ControllerAction.Down to KeyCodes.Up,
-        ControllerAction.Right to KeyCodes.Right,
-        ControllerAction.Roll to KeyCodes.Space)
+    private val holdActionKeys = mapOf(
+        ControllerAction.Roll to intArray(KeyCodes.Space, KeyCodes.Shift),
+        ControllerAction.Hint to intArray(KeyCodes.Backspace, KeyCodes.Enter))
 
-    val spareKeys = mapOf(
-        ControllerAction.Up to KeyCodes.S,
-        ControllerAction.Left to KeyCodes.A,
-        ControllerAction.Down to KeyCodes.W,
-        ControllerAction.Right to KeyCodes.D,
-        ControllerAction.Roll to KeyCodes.Shift)
+    private val mixedActionKeys = mapOf(
+        ControllerAction.Up to intArray(KeyCodes.Down, KeyCodes.S),
+        ControllerAction.Left to intArray(KeyCodes.Left, KeyCodes.A),
+        ControllerAction.Down to intArray(KeyCodes.Up, KeyCodes.W),
+        ControllerAction.Right to intArray(KeyCodes.Right, KeyCodes.D))
 
-    val isPressed = hashMapOf<Int?, Boolean>()
+
+    private val pressActionKeys = mapOf(
+        ControllerAction.Restart to intArray(KeyCodes.Escape))
+
+    private val isDown = hashSetOf<Int>()
+    private val wasPressed = hashSetOf<Int>()
+    private var continuousMode = true
 
     ;{
-        val isPressed = isPressed
+        val isDown = isDown
         window.onkeydown =
         {
-            isPressed += Pair(it.keyCode, true)
+            isDown.add(it.keyCode)
+            wasPressed.add(it.keyCode)
+
+            if (it.keyCode == KeyCodes.P)
+            {
+                continuousMode = !continuousMode
+                wasPressed.clear()
+            }
         }
 
         window.onkeyup =
         {
-            isPressed += Pair(it.keyCode, false)
+            isDown.remove(it.keyCode)
         }
     }
 
+    private fun checkHold(keys: IntArray?) =
+        keys?.any{ isDown.contains(it)  } ?: false
+
+    private fun retrieveFirst(keys: IntArray?): Boolean
+    {
+        for (key in keys ?: intArray())
+        {
+            if (wasPressed.remove(key))
+            {
+                return true
+            }
+        }
+        return false
+    }
+
     override fun isActive(action: ControllerAction): Boolean =
-        (keys.contains(action) &&
-            isPressed.getOrElse(keys[action]) { false }) ||
-        (spareKeys.contains(action) &&
-            isPressed.getOrElse(spareKeys[action]) { false })
+        checkHold(holdActionKeys[action]) || retrieveFirst(pressActionKeys[action]) ||
+            if (continuousMode)
+                checkHold(mixedActionKeys[action])
+            else
+                retrieveFirst(mixedActionKeys[action])
 
 }
 

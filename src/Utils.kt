@@ -41,6 +41,9 @@ object KeyCodes
 {
     val Space = 32
     val Shift = 16
+    val Backspace = 8
+    val Enter = 13
+    val Escape = 27
 
     val Left = 37
     val Up = 38
@@ -51,4 +54,7 @@ object KeyCodes
     val A = 65
     val S = 83
     val D = 68
+    val P = 80
+    val R = 82
+    val U = 85
 }

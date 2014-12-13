@@ -9,15 +9,17 @@ native object PIXI
     native class Point(val x: Number, val y: Number)
     native class Rectangle(val x: Number, val y: Number, val width: Number, val height: Number)
 
-    native trait DisplayObject
+    native open class DisplayObject
     {
         var position: Point get() = noImpl; set(v) = noImpl
         var rotation: Double get() = noImpl; set(v) = noImpl
         var pivot: Point get() = noImpl; set(v) = noImpl
         var scale: Point get() = noImpl; set(v) = noImpl
+
+        native var visible: Boolean get() = noImpl; set(v) = noImpl
     }
 
-    native trait DisplayObjectContainer: DisplayObject
+    native open class DisplayObjectContainer: DisplayObject()
     {
         native fun addChild(child: DisplayObject): DisplayObject = noImpl
         native fun removeChild(child: DisplayObject): DisplayObject = noImpl
@@ -25,7 +27,7 @@ native object PIXI
         native fun removeChildren(): Unit = noImpl
     }
 
-    native class Stage(color: Number = 0): DisplayObjectContainer
+    native class Stage(color: Number = 0): DisplayObjectContainer()
 
     native class CanvasRenderer(width: Number = 800, height: Number = 600)
     {
@@ -33,7 +35,7 @@ native object PIXI
         native fun render(stage: Stage): Unit = noImpl
     }
 
-    native class Graphics: DisplayObject
+    native class Graphics: DisplayObject()
     {
         native fun beginFill(color: Number = 0, alpha: Number = 1): Graphics = noImpl
         native fun endFill(): Graphics = noImpl
@@ -44,7 +46,6 @@ native object PIXI
         native fun lineTo(x: Number, y: Number): Graphics = noImpl
         native fun drawRect(x: Number, y: Number, width: Number, height: Number): Graphics = noImpl
         native fun drawCircle(x: Number, y: Number, radius: Number): Graphics = noImpl
-
 
         native fun clear(): Graphics = noImpl
     }
@@ -71,6 +72,6 @@ native object PIXI
         }
     }
 
-    native class Sprite(texture: Texture): DisplayObject
-    native class SpriteBatch(): DisplayObjectContainer
+    native class Sprite(texture: Texture): DisplayObject()
+    native class SpriteBatch(): DisplayObjectContainer()
 }

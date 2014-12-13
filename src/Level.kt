@@ -7,6 +7,22 @@ class Character(var currentTile: Point = Point.zero)
     var direction = Direction.None
     var moveDirection = Direction.None
     var isRolling = false
+
+    val rollSources = arrayOfNulls<Point>(4)
+    var rollSourcesUpdated = false
+
+    fun stop()
+    {
+        targetTile = currentTile
+        shift = 0.0
+        moveDirection = Direction.None
+    }
+
+    class object
+    {
+        val moveDirections =
+            Direction.values().filter{ it != Direction.None }.toArrayList()
+    }
 }
 
 class Snowman(var currentTile: Point = Point.zero)
@@ -32,6 +48,24 @@ class Snowman(var currentTile: Point = Point.zero)
         }
     }
 
+    fun reduce()
+    {
+        if (partsCount > 1)
+        {
+            partSizes[partsCount - 1] = 0
+        }
+        else
+        {
+            --partSizes[0]
+        }
+    }
+
+    fun stop()
+    {
+        targetTile = currentTile
+        shift = 0.0
+    }
+
     class object
     {
         val MaxSize = 3
@@ -49,9 +83,20 @@ class Level(val width: Int, val height: Int,
     var snowmenChanged = false
     var snowChanged = false
 
+    fun reset()
+    {
+        snow.indices.forEach { snow[it] = 0 }
+        snowChanged = true
+
+        snowmen.clear()
+        snowmenChanged = true
+
+        characters.clear()
+    }
+
     fun isPassable(tileX: Int, tileY: Int) =
-        tileX >= 0 && tileX < width &&
-        tileY >= 0 && tileY < height &&
+        tileX in 0..width - 1 &&
+        tileY in 0..height - 1 &&
         grid[tileY * width + tileX] <= 0
 
     fun isPassable(tile: Point) = isPassable(tile.x, tile.y)
@@ -67,6 +112,17 @@ class Level(val width: Int, val height: Int,
 
     fun hasSnow(tile: Point) = hasSnow(tile.x, tile.y)
 
+    fun addSnow(tileX: Int, tileY: Int)
+    {
+        if (isPassable(tileX, tileY))
+        {
+            snow[width * tileY + tileX] = 0
+            snowChanged = true
+        }
+    }
+
+    fun addSnow(tile: Point) = addSnow(tile.x, tile.y)
+
     fun removeSnow(tileX: Int, tileY: Int)
     {
         if (isPassable(tileX, tileY))
@@ -80,7 +136,15 @@ class Level(val width: Int, val height: Int,
 
     fun canMoveTo(tile: Point) = isPassable(tile) && !hasSomething(tile)
 
-    fun createSnowman(tile: Point): Snowman=
+    fun createCharacter(tile: Point): Character =
+        with(Character(tile))
+        {
+            findRolls()
+            characters.add(this)
+            this
+        }
+
+    fun createSnowman(tile: Point): Snowman =
         with(Snowman(tile))
         {
             partSizes[0] = 1
@@ -92,6 +156,54 @@ class Level(val width: Int, val height: Int,
     fun findSnowman(tile: Point): Snowman? =
         snowmen.firstOrNull{ it.currentTile == tile }
 
+    fun Character.findRolls()
+    {
+        for (i in Character.moveDirections.indices)
+        {
+            val direction = Character.moveDirections[i]
+
+            val target = currentTile + direction
+            val existingSnowman = findSnowman(target)
+
+            val snowmanTarget = target + direction
+            val targetSnowman = findSnowman(snowmanTarget)
+
+            val rollSourceTile = when
+            {
+                existingSnowman != null && targetSnowman != null &&
+                    existingSnowman.isRollable ->
+                {
+                    val size = existingSnowman.partSizes[0] +
+                        if (hasSnow(target)) 1 else 0
+
+                    when
+                    {
+                        targetSnowman.hasPlaceFor(size) -> target
+                        hasSnow(currentTile) && existingSnowman.hasPlaceFor(1) -> currentTile
+                        else -> null
+                    }
+                }
+
+                existingSnowman != null && existingSnowman.isRollable &&
+                    canMoveTo(snowmanTarget) ->
+                {
+                    target
+                }
+
+                hasSnow(currentTile) && (canMoveTo(target) ||
+                        existingSnowman != null && existingSnowman.hasPlaceFor(1)) ->
+                {
+                    currentTile
+                }
+
+                else -> null
+            }
+
+            rollSources[i] = rollSourceTile
+        }
+        rollSourcesUpdated = true
+    }
+
     fun Character.update()
     {
         if (currentTile != targetTile)
@@ -101,67 +213,43 @@ class Level(val width: Int, val height: Int,
             {
                 currentTile = targetTile
                 shift -= 1.0
+                findRolls()
             }
         }
         else if (direction != Direction.None)
         {
             val target = currentTile + direction
-            val snowmanTarget = target + direction
 
             if (isRolling)
             {
-                val existingSnowman = findSnowman(target)
-                val targetSnowman = findSnowman(snowmanTarget)
+                val rollSource = rollSources[direction.ordinal() - 1]
 
-                val existingSize =
-                    if (existingSnowman != null)
-                        existingSnowman.partSizes[0]
-                    else 0
-
-                val newSize = existingSize + (if (hasSnow(target)) 1 else 0)
-
-                val canRoll =
-                    targetSnowman != null && targetSnowman.hasPlaceFor(existingSize) ||
-                        canMoveTo(snowmanTarget)
-
-                val removeSnow =
-                    targetSnowman == null || targetSnowman.hasPlaceFor(newSize)
-
-                if (existingSnowman == null)
+                if (rollSource == currentTile)
                 {
-                    if (canMoveTo(target))
-                    {
-                        if (hasSnow(currentTile))
-                        {
-                            createSnowman(currentTile).targetTile = target
-                            snowmenChanged = true
-                            removeSnow(currentTile)
-                        }
-                        else
-                        {
-                            targetTile = target
-                        }
-                    }
-                }
-                else if (canRoll && existingSnowman.isRollable)
-                {
-                    existingSnowman.targetTile = snowmanTarget
-                    if (hasSnow(target)&& removeSnow && existingSnowman.partSizes[0] < Snowman.MaxSize)
-                    {
-                        ++existingSnowman.partSizes[0]
-                        snowmenChanged = true
-                        removeSnow(target)
-                    }
-                    targetTile = target
-                }
-                else if (hasSnow(currentTile) && existingSnowman.hasPlaceFor(0))
-                {
-                    createSnowman(currentTile).targetTile = target
-                    snowmenChanged = true
                     removeSnow(currentTile)
+                    createSnowman(currentTile).targetTile = target
+
+                    snowChanged = true
+                    snowmenChanged = true
+
+                    findRolls()
+                }
+                else if (rollSource == target)
+                {
+                    val snowman = findSnowman(target)!!
+                    if (snowman.partSizes[0] < Snowman.MaxSize && hasSnow(target))
+                    {
+                        ++snowman.partSizes[0]
+                        removeSnow(target)
+
+                        snowChanged = true
+                        snowmenChanged = true
+                    }
+                    snowman.targetTile = target + direction
                 }
             }
-            else if (canMoveTo(target))
+
+            if (canMoveTo(target))
             {
                 targetTile = target
             }
@@ -189,6 +277,7 @@ class Level(val width: Int, val height: Int,
                     shift = 0.0
                 }
             }
+            characters.forEach { it.findRolls() }
         }
     }
 
@@ -207,4 +296,6 @@ class Level(val width: Int, val height: Int,
         snowmen.forEach{ it.update() }
         characters.forEach{ it.update() }
     }
+
+
 }
