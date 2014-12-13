@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <script type="application/javascript" src="scripts/pixi.js"></script>
     <script type="application/javascript" src="scripts/kotlin.js"></script>
-    <script type="application/javascript" src="scripts/LD31_Jam.js"></script>
+    <script type="application/javascript" src="scripts/LD31.js"></script>
     <title></title>
     <style type="text/css">
         canvas {
@@ -16,7 +16,7 @@
             position: relative;
             margin-left: auto;
             margin-right: auto;
-            width: 500px;
+            width: 650px;
         }
         #title, h3 {
             text-align: center;
@@ -30,8 +30,8 @@
     </audio>
 
     <h1 id="title">
-        Darumaban (an <a href="http://ludumdare.com/compo/ludum-dare-31/">LD31</a> Jam Entry)
-        (<a href="https://github.com/alfadur/darumaban/tree/Jam_version">Source code</a>)
+        Darumaban (Postjam version)
+        (<a href="https://github.com/alfadur/darumaban">Source code</a>)
     </h1>
 
     <div id="game">
@@ -42,6 +42,9 @@
         <ul>
             <li>Press [Arrow keys] or [WASD] to move</li>
             <li>Hold [Space] or [Shift] while moving to roll a snowball</li>
+            <li>Hold [Enter] to see where snowballs can be rolled from the current position</li>
+            <li>Press [P] to switch movement mode between continuous and move-one-tile-per-key-press</li>
+            <li>Press [Escape] to restart the level</li>
             <li>Roll a snowball over snow to increase its size</li>
             <li>Rolling 3 snowballs of decreasing sizes on top of each other makes a snowman</li>
             <li>The goal is to fill all the marked tiles with snowmen</li>
